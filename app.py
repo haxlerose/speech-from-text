@@ -1,54 +1,92 @@
-from transformers import AutoProcessor, AutoModel
-import scipy.io.wavfile
 from flask import Flask, request
+from transformers import AutoProcessor, AutoModel
 import numpy as np
+import logging
+import os
+import scipy.io.wavfile
 import time
+
+logging.basicConfig(level=logging.INFO)
+
+TTS_DEFAULT_MODEL = "suno/bark-small"
+VOICE_PRESET_DEFAULT = "v2/en_speaker_6"
+VOICE_GENDER = 'MAN'
+SAMPLE_RATE = 24000
+PAD_TOKEN_ID = 10000
+FIXED_MODEL = True  # Set this to False to allow the client to specify the model
 
 app = Flask(__name__)
 
-TTS_MODEL = "suno/bark-small"
-VOICE_PRESET_DEFAULT = "v2/en_speaker_6"
-VOICE_GENDER = 'MAN'
+if FIXED_MODEL:
+    logging.info("Loading model and processor...")
+    processor = AutoProcessor.from_pretrained(TTS_DEFAULT_MODEL)
+    model = AutoModel.from_pretrained(TTS_DEFAULT_MODEL)
+    logging.info("Model and processor loaded.")
 
-def voice_preset():
-    voice_preset = request.json.get('voice_preset', None)
+
+def get_voice_preset(request_json):
+    """Extracts the voice preset from the request JSON. Defaults to VOICE_PRESET_DEFAULT if not present."""
+    voice_preset = request_json.get('voice_preset', None)
     if voice_preset is not None and isinstance(voice_preset, int) and voice_preset >= 0:
         voice_preset = "v2/en_speaker_" + str(voice_preset)
     else:
         voice_preset = VOICE_PRESET_DEFAULT
     return voice_preset
 
-def process_text(text, voice_preset):
-    processor = AutoProcessor.from_pretrained(TTS_MODEL)
-    model = AutoModel.from_pretrained(TTS_MODEL)
-    text = "[" + VOICE_GENDER + "]" + " " + "[speed: 1.0] [volume: 1.0]" + text
+def get_model(request_json):
+    """Extracts the model from the request JSON. Defaults to TTS_DEFAULT_MODEL if not present."""
+    global model, processor
+    if FIXED_MODEL:
+        return model, processor
+    else:
+        model_name = request_json.get('model', TTS_DEFAULT_MODEL)
+        return AutoModel.from_pretrained(model_name), AutoProcessor.from_pretrained(model_name)
+
+def process_text(text, voice_preset, model, processor):
+    """Processes the text and returns the inputs."""
     inputs = processor(text, return_tensors="pt", voice_preset=voice_preset)
-    return model, inputs
+    return inputs
 
 def generate_speech(model, inputs):
-    speech_values = model.generate(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"], do_sample=True, pad_token_id=10000)
+    """Generates speech from the model and inputs."""
+    speech_values = model.generate(input_ids=inputs["input_ids"], attention_mask=inputs["attention_mask"], do_sample=True, pad_token_id=PAD_TOKEN_ID)
     audio = speech_values.detach().numpy().squeeze()
     audio = np.clip(audio, -1, 1)
     audio = np.int16(audio * 32767)
     return audio
 
 def write_output(filename, audio):
-    scipy.io.wavfile.write(filename, 24000, audio)
+    """Writes the audio to a file."""
+    scipy.io.wavfile.write(filename, SAMPLE_RATE, audio)
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
+    """Handles the /synthesize route."""
     start_time = time.time()
 
-    voice = voice_preset()
-    text = request.json['text']
-    model, inputs = process_text(text, voice)
+    text = request.json.get('text')
+    if text is None:
+        return {"message": "No text provided", "status": "error"}, 400
+    else:
+        text = "[" + VOICE_GENDER + "]" + " " + "[speed: 1.0] [volume: 1.0] " + text
+
+    voice = get_voice_preset(request.json)
+
+    model, processor = get_model(request.json)
+    inputs = process_text(text, voice, model, processor)
     audio = generate_speech(model, inputs)
 
-    filename = f"{TTS_MODEL}_{voice}_{VOICE_GENDER}_speed_vol_output.wav".replace("/", "_")
+    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_vol_output.wav".replace("/", "_")
     write_output(filename, audio)
 
     processing_time = time.time() - start_time
-    return {"message": "Speech synthesized successfully", "text": text, "processing_time_sec": processing_time, "processing_time_min": processing_time/60}
+    return {
+        "message": "Speech synthesized successfully",
+        "filename": filename,
+        "text": text,
+        "processing_time_sec": processing_time,
+        "processing_time_min": processing_time/60
+        }
 
 if __name__ == '__main__':
     app.run(debug=True)
