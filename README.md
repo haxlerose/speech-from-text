@@ -1,3 +1,20 @@
+# Text-to-Speech Synthesis API
+
+This repository contains a Flask API for a text-to-speech synthesis application. The application uses the Bark model created by Suno from Hugging Face's Transformers library to generate speech from text.
+
+The API has a single endpoint, /synthesize, which accepts a POST request with a JSON body containing the following fields:
+
+- `text`: The text to be synthesized into speech.
+- `voice_preset` (optional): An integer representing the voice preset to be used. If not provided, the default voice preset will be used.
+
+The response from the API will be a JSON object containing the following fields:
+
+- `message`: A message indicating the status of the request.
+- `text`: The original text that was synthesized.
+- `processing_time_sec`: The time it took to process the request in seconds.
+- `processing_time_min`: The time it took to process the request in minutes.
+
+
 # Bark Documentation
 
 Bark is a transformer-based text-to-audio model created by Suno. Bark can generate highly realistic, multilingual speech as well as other audio - including music, background noise and simple sound effects. The model can also produce nonverbal communications like laughing, sighing and crying. To support the research community, we are providing access to pretrained model checkpoints ready for inference.
