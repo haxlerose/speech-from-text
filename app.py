@@ -16,7 +16,7 @@ TTS_DEFAULT_MODEL = "suno/bark-small" # Used if FIXED_MODEL is True or no client
 DEFAULT_TEXT_SPEED = 1.0 # Accepts a range from 0.5 to 2.0
 DEFAULT_TEXT_VOLUME = 1.0 # Accepts a range from 0.5 to 2.0
 VOICE_GENDER = 'MAN'
-VOICE_PRESET_DEFAULT = "6"
+VOICE_PRESET_DEFAULT = "6" # Uses only libraries begining with 'v2/en_speaker_' from suno-ai.notion.site/8b8e8749ed514b0cbf3f699013548683
 PAD_TOKEN_ID = 10000
 SAMPLE_RATE = 24000
 
