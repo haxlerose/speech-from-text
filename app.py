@@ -6,14 +6,19 @@ import os
 import scipy.io.wavfile
 import time
 
+# to make an API call to this server, run the following command in a terminal:
+# curl -X POST -H "Content-Type: application/json" -d '{"text":"Hello World!", "voice_preset":4}' http://localhost:5000/synthesize
+
 logging.basicConfig(level=logging.INFO)
 
-TTS_DEFAULT_MODEL = "suno/bark-small"
-VOICE_PRESET_DEFAULT = "6"
-VOICE_GENDER = 'MAN'
-SAMPLE_RATE = 24000
-PAD_TOKEN_ID = 10000
 FIXED_MODEL = True  # Set this to False to allow the client to specify the model
+TTS_DEFAULT_MODEL = "suno/bark-small"
+DEFAULT_TEXT_SPEED = 1.0
+DEFAULT_TEXT_VOLUME = 1.0
+VOICE_GENDER = 'MAN'
+VOICE_PRESET_DEFAULT = "6"
+PAD_TOKEN_ID = 10000
+SAMPLE_RATE = 24000
 
 app = Flask(__name__)
 
@@ -67,6 +72,7 @@ def synthesize():
         return {"message": "No text provided", "status": "error"}, 400
     else:
         text = "[" + VOICE_GENDER + "]" + " " + "[speed: 1.0] [volume: 1.0] " + text
+        text = f"[{VOICE_GENDER}] [speed: {DEFAULT_TEXT_SPEED}] [volume: {DEFAULT_TEXT_VOLUME}] {text}"
 
     voice = get_voice_preset(request.json)
 
