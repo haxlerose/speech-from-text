@@ -13,8 +13,8 @@ logging.basicConfig(level=logging.INFO)
 
 FIXED_MODEL = True  # Set this to False to allow the client to specify the model
 TTS_DEFAULT_MODEL = "suno/bark-small" # Used if FIXED_MODEL is True or no client model. Larger option: "suno/bark"
-DEFAULT_TEXT_SPEED = 1.0
-DEFAULT_TEXT_VOLUME = 1.0
+DEFAULT_TEXT_SPEED = 1.0 # Accepts a range from 0.5 to 2.0
+DEFAULT_TEXT_VOLUME = 1.0 # Accepts a range from 0.5 to 2.0
 VOICE_GENDER = 'MAN'
 VOICE_PRESET_DEFAULT = "6"
 PAD_TOKEN_ID = 10000
