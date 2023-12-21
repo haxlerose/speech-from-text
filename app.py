@@ -9,7 +9,7 @@ import time
 logging.basicConfig(level=logging.INFO)
 
 TTS_DEFAULT_MODEL = "suno/bark-small"
-VOICE_PRESET_DEFAULT = "v2/en_speaker_6"
+VOICE_PRESET_DEFAULT = "6"
 VOICE_GENDER = 'MAN'
 SAMPLE_RATE = 24000
 PAD_TOKEN_ID = 10000
@@ -26,12 +26,10 @@ if FIXED_MODEL:
 
 def get_voice_preset(request_json):
     """Extracts the voice preset from the request JSON. Defaults to VOICE_PRESET_DEFAULT if not present."""
-    voice_preset = request_json.get('voice_preset', None)
-    if voice_preset is not None and isinstance(voice_preset, int) and voice_preset >= 0:
-        voice_preset = "v2/en_speaker_" + str(voice_preset)
-    else:
+    voice_preset = request_json.get('voice_preset', VOICE_PRESET_DEFAULT)
+    if not (isinstance(voice_preset, int) and voice_preset >= 0):
         voice_preset = VOICE_PRESET_DEFAULT
-    return voice_preset
+    return "v2/en_speaker_" + str(voice_preset)
 
 def get_model(request_json):
     """Extracts the model from the request JSON. Defaults to TTS_DEFAULT_MODEL if not present."""
@@ -76,7 +74,7 @@ def synthesize():
     inputs = process_text(text, voice, model, processor)
     audio = generate_speech(model, inputs)
 
-    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_vol_output.wav".replace("/", "_")
+    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_1_0_vol_1_0_output.wav".replace("/", "_")
     write_output(filename, audio)
 
     processing_time = time.time() - start_time
