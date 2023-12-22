@@ -69,7 +69,7 @@ def generate_speech(model, inputs):
     return audio
 
 def write_output(filename, audio):
-    """Writes the audio to a file and uploads to AWS S3."""
+    """Writes the audio to a file and uploads to AWS S3 (optional)."""
     scipy.io.wavfile.write(filename, SAMPLE_RATE, audio)
     if USE_AWS_S3:
         try:

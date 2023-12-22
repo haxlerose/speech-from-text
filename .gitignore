@@ -2,3 +2,5 @@
 *.wav
 *.pyc
 .env
+requirements.txt
+Dockerfile
