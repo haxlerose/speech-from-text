@@ -1,10 +1,14 @@
+from dotenv import load_dotenv
 from flask import Flask, request
 from transformers import AutoProcessor, AutoModel
 import numpy as np
+import boto3
 import logging
 import os
 import scipy.io.wavfile
 import time
+
+load_dotenv()
 
 # to make an API call to this server, run the following command in a terminal:
 # curl -X POST -H "Content-Type: application/json" -d '{"text":"Hello World!", "voice_preset":4}' YOUR_URL_HERE/synthesize
@@ -19,8 +23,14 @@ VOICE_GENDER = 'MAN'
 VOICE_PRESET_DEFAULT = "6" # Uses only libraries begining with 'v2/en_speaker_' from suno-ai.notion.site/8b8e8749ed514b0cbf3f699013548683
 PAD_TOKEN_ID = 10000
 SAMPLE_RATE = 24000
+USE_AWS_S3 = True
 
 app = Flask(__name__)
+
+if USE_AWS_S3:
+    assert os.getenv('AWS_ACCESS_KEY_ID') is not None, "AWS_ACCESS_KEY_ID must be set if USE_AWS_S3 is True"
+    assert os.getenv('AWS_SECRET_ACCESS_KEY') is not None, "AWS_SECRET_ACCESS_KEY must be set if USE_AWS_S3 is True"
+    assert os.getenv('S3_BUCKET_NAME') is not None, "S3_BUCKET_NAME must be set if USE_AWS_S3 is True"
 
 if FIXED_MODEL:
     logging.info("Loading model and processor...")
@@ -59,8 +69,21 @@ def generate_speech(model, inputs):
     return audio
 
 def write_output(filename, audio):
-    """Writes the audio to a file."""
+    """Writes the audio to a file and uploads to AWS S3."""
     scipy.io.wavfile.write(filename, SAMPLE_RATE, audio)
+    if USE_AWS_S3:
+        try:
+            s3 = boto3.client(
+                's3',
+                aws_access_key_id=os.getenv('AWS_ACCESS_KEY_ID'),
+                aws_secret_access_key=os.getenv('AWS_SECRET_ACCESS_KEY')
+            )
+            bucket_name = os.getenv('S3_BUCKET_NAME')
+            s3.upload_file(filename, bucket_name, filename)
+        except Exception as e:
+            logging.error(f"Failed to upload file to S3: {e}")
+        finally:
+            os.remove(filename)
 
 @app.route('/synthesize', methods=['POST'])
 def synthesize():
