@@ -11,7 +11,7 @@ import time
 load_dotenv()
 
 # to make an API call to this server, run the following command in a terminal:
-# curl -X POST -H "Content-Type: application/json" -d '{"text":"Hello World!", "voice_preset":4}' YOUR_URL_HERE/synthesize
+# curl -X POST -H "Content-Type: application/json" -H "Token: your_token" -d '{"text":"Hello World!", "voice_preset":4}' YOUR_URL/synthesize
 
 logging.basicConfig(level=logging.INFO)
 
@@ -38,6 +38,11 @@ if FIXED_MODEL:
     model = AutoModel.from_pretrained(TTS_DEFAULT_MODEL)
     logging.info("Model and processor loaded.")
 
+def check_token(request):
+    token = request.headers.get('Token')
+    print(f"Token from request headers: {token}")
+    print(f"Token from .env file: {os.getenv('SECRET_TOKEN')}")
+    return token == os.getenv('SECRET_TOKEN')
 
 def get_voice_preset(request_json):
     """Extracts the voice preset from the request JSON. Defaults to VOICE_PRESET_DEFAULT if not present."""
@@ -89,6 +94,9 @@ def write_output(filename, audio):
 def synthesize():
     """Handles the /synthesize route."""
     start_time = time.time()
+
+    if not check_token(request):
+        return {"message": "Invalid token", "status": "error"}, 401
 
     text = request.json.get('text')
     if text is None:
