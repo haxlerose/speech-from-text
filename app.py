@@ -7,7 +7,7 @@ import scipy.io.wavfile
 import time
 
 # to make an API call to this server, run the following command in a terminal:
-# curl -X POST -H "Content-Type: application/json" -d '{"text":"Hello World!", "voice_preset":4}' http://localhost:5000/synthesize
+# curl -X POST -H "Content-Type: application/json" -d '{"text":"Hello World!", "voice_preset":4}' YOUR_URL_HERE/synthesize
 
 logging.basicConfig(level=logging.INFO)
 
@@ -79,7 +79,11 @@ def synthesize():
     inputs = process_text(text, voice, model, processor)
     audio = generate_speech(model, inputs)
 
-    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_1_0_vol_1_0.wav".replace("/", "_")
+    filename = (
+        f"{model.name_or_path}_{voice}_{VOICE_GENDER}"
+        f"_speed_{DEFAULT_TEXT_SPEED:.1f}"
+        f"_vol_{DEFAULT_TEXT_VOLUME:.1f}"
+    ).replace(".", "_").replace("/", "_") + ".wav"
     write_output(filename, audio)
 
     processing_time = time.time() - start_time
