@@ -14,4 +14,4 @@ RUN pip install --no-cache-dir -r requirements.txt
 EXPOSE 5000
 
 # Run gunicorn server when the container launches
-CMD ["gunicorn", "-w", "2", "-b", ":5000", "-t", "300", "app:app"]
+CMD ["gunicorn", "-w", "1", "-b", ":5000", "-t", "300", "app:app"]
