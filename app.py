@@ -40,8 +40,6 @@ if FIXED_MODEL:
 
 def check_token(request):
     token = request.headers.get('Token')
-    print(f"Token from request headers: {token}")
-    print(f"Token from .env file: {os.getenv('SECRET_TOKEN')}")
     return token == os.getenv('SECRET_TOKEN')
 
 def get_voice_preset(request_json):
