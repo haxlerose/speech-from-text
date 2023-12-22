@@ -71,7 +71,6 @@ def synthesize():
     if text is None:
         return {"message": "No text provided", "status": "error"}, 400
     else:
-        text = "[" + VOICE_GENDER + "]" + " " + "[speed: 1.0] [volume: 1.0] " + text
         text = f"[{VOICE_GENDER}] [speed: {DEFAULT_TEXT_SPEED}] [volume: {DEFAULT_TEXT_VOLUME}] {text}"
 
     voice = get_voice_preset(request.json)
@@ -80,7 +79,7 @@ def synthesize():
     inputs = process_text(text, voice, model, processor)
     audio = generate_speech(model, inputs)
 
-    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_1_0_vol_1_0_output.wav".replace("/", "_")
+    filename = f"{model.name_or_path}_{voice}_{VOICE_GENDER}_speed_1_0_vol_1_0.wav".replace("/", "_")
     write_output(filename, audio)
 
     processing_time = time.time() - start_time
